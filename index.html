@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Entregas Mejorado</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #141E30, #243B55);
+            font-family: 'Arial', sans-serif;
+            color: #fff;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+            backdrop-filter: blur(10px);
+            max-width: 500px;
+            width: 100%;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        .container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2rem;
+            color: #dcdde1;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+            color: #dcdde1;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            outline: none;
+        }
+        .form-group input:focus {
+            box-shadow: 0 0 8px #3498db;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background-color: #3498db;
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.3s ease;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        .result {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.1rem;
+            color: #dcdde1;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Registro de Entregas Mejorado</h2>
+        <div class="form-group">
+            <label for="cantidad">Cantidad Entregada:</label>
+            <input type="number" id="cantidad" min="1" required>
+        </div>
+        <div class="form-group">
+            <label for="entregadoA">Entregado a (ID de Discord):</label>
+            <input type="text" id="entregadoA" required>
+        </div>
+        <div class="form-group">
+            <label for="fecha">Fecha:</label>
+            <input type="text" id="fecha" disabled>
+        </div>
+        <button onclick="procesarDatos()">Calcular y Enviar</button>
+        <div id="resultado" class="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('fecha').value = new Date().toLocaleDateString();
+
+        async function procesarDatos() {
+            const cantidad = parseInt(document.getElementById('cantidad').value);
+            const entregadoA = document.getElementById('entregadoA').value.trim();
+            const fecha = document.getElementById('fecha').value;
+
+            if (!cantidad || !entregadoA) {
+                alert("Por favor, completa todos los campos.");
+                return;
+            }
+
+            const total = cantidad * 110;
+            const setentaPorciento = Math.round(total * 0.7);
+            const treintaPorciento = Math.round(total * 0.3);
+
+            document.getElementById('resultado').innerHTML = `
+                <p>Total: $${total}</p>
+                <p>70%: $${setentaPorciento}</p>
+                <p>30%: $${treintaPorciento}</p>
+            `;
+
+            const webhookURL = "https://discordapp.com/api/webhooks/1288576205603471420/hBwTdc7xVR0qqdJ4ResWSBI1iww231OvChbHwnmkDh3-_j_HNO0k_-l-9-TVQmJ7wl4B";
+            const embed = {
+                "content": `<@${entregadoA}>`, // Menciona al usuario
+                "embeds": [{
+                    "title": "📦 Registro de Entrega",
+                    "color": 3447003,
+                    "fields": [
+                        {
+                            "name": "🔢 Cantidad Entregada",
+                            "value": `**${cantidad}**`,
+                            "inline": true
+                        },
+                        {
+                            "name": "👤 Entregado a",
+                            "value": `**${entregadoA}**`,
+                            "inline": true
+                        },
+                        {
+                            "name": "📅 Fecha",
+                            "value": `**${fecha}**`,
+                            "inline": true
+                        },
+                        {
+                            "name": "💰 Total",
+                            "value": `**$${total}**`,
+                            "inline": true
+                        },
+                        {
+                            "name": "70%",
+                            "value": `**$${setentaPorciento}**`,
+                            "inline": true
+                        },
+                        {
+                            "name": "30%",
+                            "value": `**$${treintaPorciento}**`,
+                            "inline": true
+                        }
+                    ],
+                    "footer": {
+                        "text": "Sistema de Registro • " + new Date().toLocaleTimeString(),
+                        "icon_url": "https://example.com/icon.png" 
+                    }
+                }]
+            };
+
+            try {
+                const response = await fetch(webhookURL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(embed)
+                });
+
+                if (response.ok) {
+                    alert("Los datos se han enviado correctamente a Discord.");
+                } else {
+                    alert("Hubo un problema al enviar los datos a Discord.");
+                }
+            } catch (error) {
+                console.error("Error al enviar datos al webhook:", error);
+            }
+        }
+    </script>
+</body>
+</html>
